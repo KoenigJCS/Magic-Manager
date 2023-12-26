@@ -1,0 +1,247 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.0
+-- Dumped by pg_dump version 16.0
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: banned_list; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.banned_list (
+    oracle_id uuid NOT NULL,
+    mtg_format name NOT NULL,
+    cash_time timestamp without time zone
+);
+
+
+ALTER TABLE public.banned_list OWNER TO postgres;
+
+--
+-- Name: card_cost; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.card_cost (
+    oracle_id uuid NOT NULL,
+    usd_price double precision,
+    usd_foil_price double precision,
+    cash_time timestamp without time zone
+);
+
+
+ALTER TABLE public.card_cost OWNER TO postgres;
+
+--
+-- Name: cards; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.cards (
+    oracle_id uuid NOT NULL,
+    card_name name,
+    set name,
+    mana_cost name,
+    type_line name,
+    rarity name,
+    artist name,
+    img_url name,
+    text_box character varying(1024)
+);
+
+
+ALTER TABLE public.cards OWNER TO postgres;
+
+--
+-- Name: user_table; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_table (
+    user_id integer NOT NULL,
+    username name,
+    password name
+);
+
+
+ALTER TABLE public.user_table OWNER TO postgres;
+
+--
+-- Name: user_table_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.user_table_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.user_table_user_id_seq OWNER TO postgres;
+
+--
+-- Name: user_table_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.user_table_user_id_seq OWNED BY public.user_table.user_id;
+
+
+--
+-- Name: deck_storage; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.deck_storage (
+    user_id integer NOT NULL,
+    deck_id integer DEFAULT nextval('public.user_table_user_id_seq'::regclass) NOT NULL,
+    deck_name name,
+    mtg_format name
+);
+
+
+ALTER TABLE public.deck_storage OWNER TO postgres;
+
+--
+-- Name: library_storage; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.library_storage (
+    oracle_id uuid NOT NULL,
+    deck_id integer NOT NULL,
+    issideboard boolean,
+    quantity integer,
+    card_name name
+);
+
+
+ALTER TABLE public.library_storage OWNER TO postgres;
+
+--
+-- Name: user_table user_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_table ALTER COLUMN user_id SET DEFAULT nextval('public.user_table_user_id_seq'::regclass);
+
+
+--
+-- Name: banned_list banned_list_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.banned_list
+    ADD CONSTRAINT banned_list_pkey PRIMARY KEY (oracle_id, mtg_format);
+
+
+--
+-- Name: card_cost card_cost_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.card_cost
+    ADD CONSTRAINT card_cost_pkey PRIMARY KEY (oracle_id);
+
+
+--
+-- Name: cards cards_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cards
+    ADD CONSTRAINT cards_pkey PRIMARY KEY (oracle_id);
+
+
+--
+-- Name: deck_storage deck_storage_deck_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.deck_storage
+    ADD CONSTRAINT deck_storage_deck_name_key UNIQUE (deck_name);
+
+
+--
+-- Name: deck_storage deck_storage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.deck_storage
+    ADD CONSTRAINT deck_storage_pkey PRIMARY KEY (user_id, deck_id);
+
+
+--
+-- Name: library_storage library_storage_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.library_storage
+    ADD CONSTRAINT library_storage_pkey PRIMARY KEY (oracle_id, deck_id);
+
+
+--
+-- Name: user_table user_table_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_table
+    ADD CONSTRAINT user_table_pk UNIQUE (username);
+
+
+--
+-- Name: user_table user_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_table
+    ADD CONSTRAINT user_table_pkey PRIMARY KEY (user_id);
+
+
+--
+-- Name: user_table user_table_user_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_table
+    ADD CONSTRAINT user_table_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: banned_list banned_list_oracle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.banned_list
+    ADD CONSTRAINT banned_list_oracle_id_fkey FOREIGN KEY (oracle_id) REFERENCES public.cards(oracle_id);
+
+
+--
+-- Name: card_cost card_cost_oracle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.card_cost
+    ADD CONSTRAINT card_cost_oracle_id_fkey FOREIGN KEY (oracle_id) REFERENCES public.cards(oracle_id);
+
+
+--
+-- Name: deck_storage deck_storage_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.deck_storage
+    ADD CONSTRAINT deck_storage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_table(user_id);
+
+
+--
+-- Name: library_storage library_storage_oracle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.library_storage
+    ADD CONSTRAINT library_storage_oracle_id_fkey FOREIGN KEY (oracle_id) REFERENCES public.cards(oracle_id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
